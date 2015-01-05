@@ -11,12 +11,14 @@ type client struct {
 	ex lockmap
 	sh lockmap
 	me string
+	notes map[string]string
 }
 
 func (c *client) init(me string) {
 	c.ex = make(lockmap)
 	c.sh = make(lockmap)
 	c.me = me
+	c.notes = make(map[string]string)
 }
 
 func (c *client) disconnect() {
@@ -229,6 +231,16 @@ func (c *client) doFullDump(what string) []byte {
 	}
 }
 
+func (c *client) doNote(what string) []byte {
+	arg := strings.SplitN(what, " ", 2)
+	if len(arg) == 1 {
+		return []byte(arg[0] + ": " + c.notes[arg[0]] + "\n")
+	} else {
+		c.notes[arg[0]] = arg[1]
+		return []byte("1 Set Note Success: " + arg[0] + " -> " + arg[1] + "\n")
+	}
+}
+
 func (c *client) command(input []byte) []byte {
 	// Lots of variables local to this goroutine. Because: reasons
 	var command []string
@@ -283,12 +295,14 @@ func (c *client) command(input []byte) []byte {
 		return c.doSharedDump(what)
 	case "dump":
 		return c.doFullDump(what)
+	case "n":
+		return c.doNote(what)
 	}
 	return []byte("")
 }
 
 // valid command list
-var commands = []string{"me", "iam", "who", "d", "sd", "i", "si", "g", "sg", "r", "sr", "q", "dump"}
+var commands = []string{"me", "iam", "who", "d", "sd", "i", "si", "g", "sg", "r", "sr", "q", "dump", "n"}
 
 func lock_req(lock string, action int, shared bool, my_client string) ([]byte, string) {
 	// Create a channel on which the lock or shared lock goroutine can contact us back on
