@@ -17,7 +17,7 @@ func mind_locks() {
 		_, present := locks[req.lock]
 		switch req.action {
 		case -1:
-			// The client wants to rellease the lock
+			// The client wants to release the lock
 			if present {
 				// Cool. Done
 				delete(locks, req.lock)
